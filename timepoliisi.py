@@ -136,8 +136,9 @@ response = requests.post(
     json=json_data,
 )
 
-reservationId=response.json()['reservationId']
 
+reservationId=response.json()['reservationId']
+print(response.json())
 
 cookies = {
     'pol_init': '1',
