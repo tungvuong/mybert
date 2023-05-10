@@ -1,0 +1,148 @@
+import requests
+import requests
+import re
+s = requests.Session()
+suggest = s.get('https://asiointi.poliisi.fi/ajanvaraus-fe')
+print(s.cookies.get_dict()['JSESSIONID'])
+print(re.findall("csrf = \"(.*?)\";", suggest.text)[0])
+print(s.cookies.get_dict())
+
+JSESSIONID=s.cookies.get_dict()['JSESSIONID']
+CSRF=re.findall("csrf = \"(.*?)\";", suggest.text)[0]
+
+headers = {
+    'Accept': '*/*',
+    'Accept-Language': 'en-GB,en;q=0.9',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/json',
+    'Cookie': 'pol_init=1; JSESSIONID='+JSESSIONID+';',
+    'Origin': 'https://asiointi.poliisi.fi',
+    'Referer': 'https://asiointi.poliisi.fi/ajanvaraus-fe/reserve',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
+    'X-CSRF-TOKEN': CSRF,
+    'sec-ch-ua': '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+}
+
+json_data = {
+    'participantMultiplier': 3,
+    'siteId': '5501',
+    'prereserve': False,
+    'startDate': '2023-05-05T21:00:00.000Z',
+    'endDate': '2023-08-06T20:59:59.999Z',
+    'ajanvarausServiceType': {
+        'group': {
+            'groupCode': '01',
+            'groupPrio': '1',
+            'nameFi': 'Passit ja henkilökortit',
+            'nameSv': 'Pass och identitetskort',
+            'nameEn': 'Passports and identity cards',
+            'nameSe': 'Opássat ja persovdnagoarttat',
+        },
+        'typeUICode': '0402',
+        'typeSystemCode': 'AV0499',
+        'nameFi': 'Passi',
+        'nameSv': 'Pass',
+        'nameEn': 'Passport',
+        'nameSe': 'Pássa',
+        'homeDepartmentOnly': False,
+        'caseType': 'PASSI',
+        'caseSpecificType': None,
+    },
+    'electronicApplication': False,
+}
+
+response = requests.post(
+    'https://asiointi.poliisi.fi/ajanvaraus-fe/api/timereservation/C52060_5501_2023-06-25',
+    headers=headers,
+    json=json_data,
+).json()
+
+#print(response.json())
+slots = []
+for key,slot in response['slots'].items():
+    timeSlots = slot['timeSlots']
+    if len(timeSlots)>0:
+        slots+=timeSlots
+slots.sort()
+print(slots)
+first = slots[0].split('-')[1]
+latest = slots[0]
+if first in ['06','07']:
+    latest = slots[0]
+print(latest)
+
+cookies = {
+    'poliisi_asiointi': '!s250wW+ZtWFxcwnyS0SwIBwO3Lv0ZGO8yQbSxc3HqVY1TXkwjDCY0TKkYYkIoe22ZDP9J19m7fYFooJIM/riz26h7XvZw++CM2zTCv8QXw==',
+    'pol_init': '1',
+    'JSESSIONID': JSESSIONID,
+#    'TS01805349': '01489080b5bf5dd28cd57ca539b05962bb86418883f9e3d8b7d1754af08060c874bf0e5f0f86f87725391cf3cffa2b48ccfa8e8e00',
+#    'Snoobisession_asiointi_poliisi_fi': '15492437',
+#    'Snoobi30minute_asiointi_poliisi_fi': '15492437',
+#    'SnoobiID': '1505875266-1a6ed80b69c6571322259ef628c7f99e',
+}
+
+headers = {
+    'Accept': '*/*',
+    'Accept-Language': 'en-GB,en;q=0.9',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/json',
+    'Origin': 'https://asiointi.poliisi.fi',
+    'Referer': 'https://asiointi.poliisi.fi/ajanvaraus-fe/reserve',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
+    'X-CSRF-TOKEN': CSRF,
+    'sec-ch-ua': '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+}
+
+json_data = {
+    'participantMultiplier': 3,
+    'siteId': '5501',
+    'startTime': latest+':00Z',
+    'ajanvarausServiceType': {
+        'group': {
+            'groupCode': '01',
+            'groupPrio': '1',
+            'nameFi': 'Passit ja henkilökortit',
+            'nameSv': 'Pass och identitetskort',
+            'nameEn': 'Passports and identity cards',
+            'nameSe': 'Opássat ja persovdnagoarttat',
+        },
+        'typeUICode': '0402',
+        'typeSystemCode': 'AV0499',
+        'nameFi': 'Passi',
+        'nameSv': 'Pass',
+        'nameEn': 'Passport',
+        'nameSe': 'Pássa',
+        'homeDepartmentOnly': False,
+        'caseType': 'PASSI',
+        'caseSpecificType': None,
+    },
+}
+
+response = requests.post(
+    'https://asiointi.poliisi.fi/ajanvaraus-fe/api/prereservation',
+    cookies=cookies,
+    headers=headers,
+    json=json_data,
+)
+
+# Note: json_data will not be serialized by requests
+# exactly as it was in the original request.
+#data = '{"participantMultiplier":3,"siteId":"5501","startTime":"2023-07-31T14:40:00Z","ajanvarausServiceType":{"group":{"groupCode":"01","groupPrio":"1","nameFi":"Passit ja henkilökortit","nameSv":"Pass och identitetskort","nameEn":"Passports and identity cards","nameSe":"Opássat ja persovdnagoarttat"},"typeUICode":"0402","typeSystemCode":"AV0499","nameFi":"Passi","nameSv":"Pass","nameEn":"Passport","nameSe":"Pássa","homeDepartmentOnly":false,"caseType":"PASSI","caseSpecificType":null}}'.encode()
+#response = requests.post(
+#    'https://asiointi.poliisi.fi/ajanvaraus-fe/api/prereservation',
+#    cookies=cookies,
+#    headers=headers,
+#    data=data,
+#)
+
+print(response.json())
