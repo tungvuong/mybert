@@ -4,7 +4,7 @@ import re
 
 while True:
     time.sleep(5)
-    
+
     s = requests.Session()
     suggest = s.get('https://asiointi.poliisi.fi/ajanvaraus-fe')
     #print(s.cookies.get_dict()['JSESSIONID'])
@@ -76,7 +76,7 @@ while True:
     print('- Avail slots: ',slots[:5])
     first = slots[0].split('-')[1]
     latest = None
-    if first in ['06','07']:
+    if first in ['05','06']:
         latest = slots[0]
     print(latest)
     if (latest == None):
